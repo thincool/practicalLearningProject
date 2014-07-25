@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
+
+<title>Predict human activity recognition  from accelerometers</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+
+
+
+
+</head>
+
+<body>
+<h3>Predict human activity recognition  from accelerometers</h3>
+
+<h3>Introduction</h3>
+
+<p>Human Activity Recognition has emerged as a key research area in the last years, especially for the development of context-aware systems. This project is to predict har by data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. </p>
+
+<h3>Exploratory data analysis</h3>
+
+<p>The data is pml-training.csv provide by &ldquo;Practical Machine Learning&rdquo; course. The data includes 19622 observations, each observation includes 160 aspects.</p>
+
+<pre><code>## [1] 19622   160
+</code></pre>
+
+<p>There are many NA or empty observations in dataset. The ratio of NA or empty compare with full data is 0.9793, that means this aspect is useless. </p>
+
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.979   0.979   0.979   0.979   0.979   0.979
+</code></pre>
+
+<p>I remove all aspects which has many NA or empty values. Use R nearZeroVar function to check left aspects show new_window is a near zero variable. The X is row number , the user_name, raw_timestamp_part_1, raw_timestamp_part_2 and cvtd_timestamp are user name and test time, so clearly these variables have no effect on har. I remove all these variables and create a new clean data. This clean data has 19622 observations with 54 variables.</p>
+
+<pre><code>## [1] 19622    54
+</code></pre>
+
+<p>Because the dataset is too large for my computer, I split data to training and validating by 40 - 60. The training dataset has 7846 observations, the validating dataset has 11776 observations.</p>
+
+<pre><code>## [1] 7850
+</code></pre>
+
+<pre><code>## [1] 11772
+</code></pre>
+
+<h2>Results</h2>
+
+<p>There are 54 variables in the dataset, it&#39;s diffcult to choose goof model for regression method. I use tree method to classify the har, and compare difference method performance. The methods used in this project are: C5.0, random forest with bootstrap, and random forest with 10 fold cross vaildation.</p>
+
+<pre><code>## Loading required package: plyr
+</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3348    0    0    0    0
+##          B    3 2275    0    0    0
+##          C    0    0 2049    4    0
+##          D    0    0    0 1926    3
+##          E    0    1    0    3 2160
+## 
+## Overall Statistics
+##                                         
+##                Accuracy : 0.999         
+##                  95% CI : (0.998, 0.999)
+##     No Information Rate : 0.285         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.998         
+##  Mcnemar&#39;s Test P-Value : NA            
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.999    1.000    1.000    0.996    0.999
+## Specificity             1.000    1.000    1.000    1.000    1.000
+## Pos Pred Value          1.000    0.999    0.998    0.998    0.998
+## Neg Pred Value          1.000    1.000    1.000    0.999    1.000
+## Prevalence              0.285    0.193    0.174    0.164    0.184
+## Detection Rate          0.284    0.193    0.174    0.164    0.183
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       1.000    1.000    1.000    0.998    0.999
+</code></pre>
+
+<pre><code>##    user  system elapsed 
+##  2112.1     0.5  2114.1
+</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3347    1    0    0    0
+##          B    8 2268    2    0    0
+##          C    0   10 2040    3    0
+##          D    0    0   30 1898    1
+##          E    0    0    1    3 2160
+## 
+## Overall Statistics
+##                                         
+##                Accuracy : 0.995         
+##                  95% CI : (0.994, 0.996)
+##     No Information Rate : 0.285         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.994         
+##  Mcnemar&#39;s Test P-Value : NA            
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.998    0.995    0.984    0.997    1.000
+## Specificity             1.000    0.999    0.999    0.997    1.000
+## Pos Pred Value          1.000    0.996    0.994    0.984    0.998
+## Neg Pred Value          0.999    0.999    0.997    0.999    1.000
+## Prevalence              0.285    0.194    0.176    0.162    0.184
+## Detection Rate          0.284    0.193    0.173    0.161    0.183
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       0.999    0.997    0.991    0.997    1.000
+</code></pre>
+
+<pre><code>##    user  system elapsed 
+## 3692.80   11.09 3715.85
+</code></pre>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3347    1    0    0    0
+##          B    8 2267    3    0    0
+##          C    0   10 2043    0    0
+##          D    0    0   27 1902    0
+##          E    0    1    1    3 2159
+## 
+## Overall Statistics
+##                                         
+##                Accuracy : 0.995         
+##                  95% CI : (0.994, 0.997)
+##     No Information Rate : 0.285         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.994         
+##  Mcnemar&#39;s Test P-Value : NA            
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity             0.998    0.995    0.985    0.998    1.000
+## Specificity             1.000    0.999    0.999    0.997    0.999
+## Pos Pred Value          1.000    0.995    0.995    0.986    0.998
+## Neg Pred Value          0.999    0.999    0.997    1.000    1.000
+## Prevalence              0.285    0.194    0.176    0.162    0.183
+## Detection Rate          0.284    0.193    0.174    0.162    0.183
+## Detection Prevalence    0.284    0.194    0.174    0.164    0.184
+## Balanced Accuracy       0.999    0.997    0.992    0.998    1.000
+</code></pre>
+
+<pre><code>##    user  system elapsed 
+## 1426.10    4.47 1436.65
+</code></pre>
+
+<p>All tree methods give great result for this data. Accuracy for C50 is 0.9999, for random forest with bootstrap is 0.9997, for random forest with 10 fold cross vaildation is , and with high p-value. The expected out of sample error is : 0.01% for C50, 0.03% for random forest with bootstrap, for random forest with 10 fold cross vaildation.
+Random forest is slower than C50 method, the cross valdation process makes it more slower.
+To verify the model, I test it on the test dataset. All models give the same result on test dataset, and show 100% accuracy.</p>
+
+<pre><code>## character(0)
+</code></pre>
+
+<pre><code>## character(0)
+</code></pre>
+
+<h2>References</h2>
+
+<p>1) Eduardo Velloso. &ldquo;Qualitative Activity Recognition of Weight Lifting Exercises&rdquo;. [<a href="http://perceptual.mpi-inf.mpg.de/files/2013/03/velloso13_ah.pdf">http://perceptual.mpi-inf.mpg.de/files/2013/03/velloso13_ah.pdf</a>]</p>
+
+</body>
+
+</html>
+

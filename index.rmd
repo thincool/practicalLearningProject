@@ -1,0 +1,105 @@
+### Predict human activity recognition  from accelerometers
+### Introduction
+Human Activity Recognition has emerged as a key research area in the last years, especially for the development of context-aware systems. This project is to predict har by data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. 
+```{r echo=FALSE,warning=FALSE,results='hide',message=FALSE}
+## prepare 
+library("caret")
+library("randomForest")
+library("class")
+library("C50")
+setwd("D:\\Class\\R\\PracticalLearning")
+```
+### Exploratory data analysis
+The data is pml-training.csv provide by "Practical Machine Learning" course. The data includes 19622 observations, each observation includes 160 aspects.
+```{r echo=TRUE,warning=FALSE}
+d =read.csv("pml-training.csv")
+dim(d)
+```
+There are many NA or empty observations in dataset. The ratio of NA or empty compare with full data is 0.9793, that means this aspect is useless. 
+```{r echo=TRUE,warning=FALSE}
+column_count = dim(d)[2]
+empty_na_columns =c()
+large_empty_na_columns =c()
+empty_na_ratio = c()
+for(i in c(1:column_count)){
+  empty_na_count = length(d[,i][d[,i]==""])
+	data_count = length(d[,i])
+	if(empty_na_count > 0){
+		empty_na_columns = append(empty_na_columns,names(d)[i])
+		empty_na_ratio = append(empty_na_ratio,empty_na_count/data_count)
+	}
+	if(empty_na_count/data_count > 0.5){
+		large_empty_na_columns = append(large_empty_na_columns,names(d)[i])
+	}	  
+}
+summary(empty_na_ratio)
+```
+I remove all aspects which has many NA or empty values. Use R nearZeroVar function to check left aspects show new_window is a near zero variable. The X is row number , the user_name, raw_timestamp_part_1, raw_timestamp_part_2 and cvtd_timestamp are user name and test time, so clearly these variables have no effect on har and may make the model work worse. I remove all these variables and create a new clean data. This clean data has 19622 observations with 54 variables.
+```{r echo=TRUE,warning=FALSE}
+d_removeNA = d
+for(i in empty_na_columns){
+	d_removeNA[,i]=NULL	
+}
+nsv = nearZeroVar(d_removeNA)
+cleandata = d_removeNA
+cleandata = cleandata[,-nsv]
+cleandata$X = NULL
+cleandata$user_name = NULL
+cleandata$raw_timestamp_part_1 = NULL
+cleandata$raw_timestamp_part_2 = NULL
+cleandata$cvtd_timestamp = NULL
+dim(cleandata)
+```
+Because the dataset is too large for my computer, I split data to training and validating by 40 - 60 for cross validation. The training dataset has 7850 observations, the validating dataset has 11772 observations.
+```{r echo=TRUE,warning=FALSE}
+set.seed(56723)
+inTrain = createDataPartition(y=cleandata$classe,p=0.4,list=FALSE)
+training = cleandata[inTrain,]
+validating = cleandata[-inTrain,]
+dim(training)[1]
+dim(validating)[1]
+```
+## Results
+There are 54 variables in the dataset, it's diffcult to choose goof model for regression method. I use tree method to classify the har, and compare difference method performance. The methods used in this project are: C5.0, random forest with bootstrap, and random forest with 10 fold cross vaildation.
+```{r echo=TRUE,warning=FALSE,cache=TRUE}
+"C50 Result"
+set.seed(56723)
+ptm = proc.time()
+model_c50 = train(classe~.,data=training,method="C5.0")
+#model_c50
+pred = predict(model_c50,validating)
+result_c50 = confusionMatrix(validating$classe,pred)
+result_c50
+proc.time() - ptm
+
+"random forest with bootstrap"
+ptm = proc.time()
+model_rf_default = train(classe~.,data=training,method="rf",importance=TRUE)
+#model_rf_default
+pred = predict(model_rf_default,validating)
+result_rf_default = confusionMatrix(validating$classe,pred)
+result_rf_default
+proc.time() - ptm
+ 
+"random forest with 10 fold cross vaildation"
+ptm = proc.time()
+model_rf_cv_1 = train(classe~.,data=training,method="rf",trControl = trainControl(method = "cv", number = 10),importance=TRUE)
+#model_rf_cv_1
+pred = predict(model_rf_cv_1,validating)
+result_rf_cv = confusionMatrix(validating$classe,pred)
+result_rf_cv
+proc.time() - ptm
+```
+All tree methods give great result for this data. The R confusionMatrix function shows cross validation reslut. Accuracy for C50 is 0.999, for random forest with bootstrap is 0.995, for random forest with 10 fold cross vaildation is 0.995, with high p-value. The expected out of sample error is : 0.1% for C50, 0.5% for random forest with bootstrap, 0.5% for random forest with 10 fold cross vaildation. Random forest with bootstrap is slower than C50 method, random forest with cross valdation is the fastest.
+To verify the model, I test it on the test dataset. All models give the same result on test dataset, and show 100% accuracy.
+```{r echo=TRUE,warning=FALSE}
+testdata = read.csv("pml-testing.csv")
+pred_rf_default = predict(model_rf_default,testdata)
+pred_c50 = predict(model_c50,testdata)
+pred_rf_cv1 = predict(model_rf_cv_1,testdata)
+setdiff(pred_rf_default,pred_c50)
+setdiff(pred_c50,pred_rf_cv1)
+```
+## References
+1) Eduardo Velloso. "Qualitative Activity Recognition of Weight Lifting Exercises". [http://perceptual.mpi-inf.mpg.de/files/2013/03/velloso13_ah.pdf]
+
